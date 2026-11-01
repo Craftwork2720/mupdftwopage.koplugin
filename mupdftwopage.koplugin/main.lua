@@ -6,7 +6,6 @@ local Geom = require("ui/geometry")
 local Screen = require("device").screen
 local WidgetContainer = require("ui/widget/container/widgetcontainer")
 local logger = require("logger")
-local util = require("util")
 local _ = require("gettext")
 local C_ = _.pgettext
 
@@ -59,11 +58,9 @@ end
 function MuPdfTwoPage:init()
     local doc = self.document
     local paging = self.ui and self.ui.paging
-    if not (doc and paging and doc.is_pdf and doc.provider == "mupdf") then
-        return
-    end
-    local suffix = util.getFileNameSuffix(doc.file or "")
-    if not suffix or suffix:lower() ~= "pdf" then
+    if not (doc and paging and doc.provider == "mupdf"
+        and doc.is_reflowable ~= true
+        and doc.info and doc.info.has_pages) then
         return
     end
     local configurable = doc.configurable
@@ -793,7 +790,7 @@ local function optionRows()
             enabled_func = function(configurable)
                 return isRowEnabled(configurable)
             end,
-            help_text = _([[Shows two PDF pages side by side, the way a printed book falls open. "in landscape" does it only while the screen is turned on its side, "always" in either orientation. A page that is wider than tall is shown whole and on its own, and the pairing starts again after it.
+            help_text = _([[Shows two pages side by side, the way a printed book falls open. "in landscape" does it only while the screen is turned on its side, "always" in either orientation. A page that is wider than tall is shown whole and on its own, and the pairing starts again after it.
 
 Only in page view, not in continuous view or with Reflow.]]),
         },
