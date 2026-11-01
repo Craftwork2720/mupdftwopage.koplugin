@@ -1,0 +1,40 @@
+name: Release
+
+# Push a tag like "v1.0.0" to build mupdftwopage.koplugin.zip and attach it
+# to a GitHub Release.
+on:
+  push:
+    tags:
+      - "v*.*.*"
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Check that _meta.lua version matches the tag
+        run: |
+          tag_version="${GITHUB_REF_NAME#v}"
+          meta_version=$(sed -n 's/.*version[[:space:]]*=[[:space:]]*"\([^"]*\)".*/\1/p' mupdftwopage.koplugin/_meta.lua | head -n 1)
+          echo "Tag version:  $tag_version"
+          echo "_meta.lua version: $meta_version"
+          if [ "$tag_version" != "$meta_version" ]; then
+            echo "::error::Tag ($tag_version) does not match _meta.lua version ($meta_version). Bump _meta.lua's version field before tagging."
+            exit 1
+          fi
+
+      - name: Build plugin zip
+        run: |
+          zip -r mupdftwopage.koplugin.zip mupdftwopage.koplugin \
+            -x "*.git*" -x "*/.DS_Store"
+
+      - name: Create release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: mupdftwopage.koplugin.zip
+          generate_release_notes: true
