@@ -202,7 +202,8 @@ function MuPdfTwoPage:installDocument(doc)
         if value == MODE_OFF then
             return false
         end
-        return (Screen:getRotationMode() % 2) == 1
+        -- A natural-landscape tablet sits at mode 0 in landscape.
+        return Screen:getWidth() > Screen:getHeight()
     end
 
     local function pairFor(doc_self, pageno)
@@ -319,7 +320,8 @@ function MuPdfTwoPage:installDocument(doc)
             if pair and pair.b then
                 local full = pairFullGeom(doc_self, pair)
                 if full then
-                    return Geom:new{ w = full.w, h = full.h }
+                    -- A fractional ceiling can be a hair under the crop box.
+                    return Geom:new{ w = math.ceil(full.w), h = math.ceil(full.h) }
                 end
             end
         end
